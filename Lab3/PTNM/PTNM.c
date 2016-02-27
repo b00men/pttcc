@@ -43,8 +43,9 @@ void release_sip(sip_packet *sip)
 	free(sip);
 }
 
-void release_vsnp(sip_packet *sip)
+void release_vsnp(vsnp_packet *vsnp)
 {
+	free(vsnp);
 }
 
 /*
@@ -138,8 +139,6 @@ sip_packet *process_sip(u_char *payload, int payload_size)
 
 vsnp_packet *process_vsnp(u_char *payload, int payload_size)
 {
-	unsigned short id = ntohs(*((unsigned short*)(payload)));
-	unsigned short number = ntohs(*((unsigned short*)(payload)+1));
 	vsnp_packet *vsnp = (vsnp_packet*)malloc(sizeof(vsnp_packet));
 	vsnp->answer = 0;
 	if(payload_size == 0)
@@ -147,10 +146,12 @@ vsnp_packet *process_vsnp(u_char *payload, int payload_size)
 		free(vsnp);
 		return NULL;
 	}
-	if(payload_size > 0) vsnp->id = &id;
+	unsigned short id = ntohs(*((unsigned short*)(payload)));
+	vsnp->id = &id;
 	if(payload_size > 2)
 	{
 		vsnp->answer = 1;
+		unsigned short number = ntohs(*((unsigned short*)(payload)+1));
 		vsnp->number = &number;
 	}
 	return vsnp;
@@ -233,30 +234,15 @@ pthread_mutex_t *last_observed_time_lock; //to guarantee thread safe of time rea
 
 void check_properties(packet *pkt)
 {
-	//we will check the property that the transport should be not UDP (not a very smart check)
-	unsigned short sport, dport;
+	if(pkt->protocol_type == VSNP)
 	{
-		if(pkt->protocol_type == VSNP)
-		{
-			//printf("We found VSNP!\n");
-			vsnp_packet *vsnp;
-			vsnp = pkt->protocol;
-			if (vsnp == NULL)
-			{
-				//printf("VSNP: empty pkt\n");
-				return;
-			}
-			if (vsnp->answer) printf("VSNP Number: %hu\n\n", *(vsnp->number));
-			else printf("ID: %hu \n", *(vsnp->id));
-		}
-		
+		vsnp_packet *vsnp;
+		vsnp = pkt->protocol;
+		if (vsnp == NULL) return;
+		//Monitoring
+		if (vsnp->answer) printf("ID: %hu, Num: %hu\n", *(vsnp->id), *(vsnp->number));
+		else printf("ID: %hu \n", *(vsnp->id));
 	}
-	//{
-	//	udph *udp = (udph*)pkt->transport;
-	//	sport = ntohs(udp->uh_sport);
-    //  dport = ntohs(udp->uh_dport);
-	//	printf("Property violation! Packet %i is UDP!, source port:%i, destination port:%i \n", pkt->location_in_trace, sport, dport);
-	//}
 }
  
 
@@ -392,7 +378,7 @@ void process_packet(u_char *args, const struct pcap_pkthdr *pkthdr, const u_char
 			break;
 		//add new protocols
 		default:
-			printf("We found new proto!\n");
+			//printf("We found new proto!\n");
 			break;
 	}
 
