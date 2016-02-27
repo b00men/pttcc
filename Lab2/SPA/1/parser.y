@@ -40,6 +40,8 @@ typedef void* yyscan_t;
 %token TOKEN_RBRACK
 %token TOKEN_LCBRACK
 %token TOKEN_RCBRACK
+%token TOKEN_LABRACK
+%token TOKEN_RABRACK
 
 
 %type <parenobj> P P2
@@ -57,9 +59,11 @@ P2
 	: TOKEN_LPAREN P[p] TOKEN_RPAREN { $$ = createParen(PAREN, $p, NULL); }
 	| TOKEN_LBRACK P[p] TOKEN_RBRACK { $$ = createParen(BRACK, $p, NULL); }
 	| TOKEN_LCBRACK P[p] TOKEN_RCBRACK { $$ = createParen(CBRACK, $p, NULL); }
+	| TOKEN_LABRACK P[p] TOKEN_RABRACK { $$ = createParen(ABRACK, $p, NULL); }
 	| TOKEN_LPAREN TOKEN_RPAREN { $$ = createParen(PAREN, NULL, NULL); }
 	| TOKEN_LBRACK TOKEN_RBRACK { $$ = createParen(BRACK, NULL, NULL); }
 	| TOKEN_LCBRACK TOKEN_RCBRACK { $$ = createParen(CBRACK, NULL, NULL); }
+	| TOKEN_LABRACK TOKEN_RABRACK { $$ = createParen(ABRACK, NULL, NULL); }
 	;
 
 %%

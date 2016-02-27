@@ -66,6 +66,14 @@ void printAST(paren *node, int indent)
 		printf("{}\n");
 		printAST(node->left, indent + 1);
 	}
+        else if(node->type == ABRACK)
+        {
+                for (i = 0; i< indent; i++)
+                        printf("\t");
+
+                printf("<>\n");
+                printAST(node->left, indent + 1);
+        }
 	else 
 	{
 		printAST(node->left, indent);

@@ -21,7 +21,8 @@ typedef enum parentypetag
 	NONE,
 	PAREN,
 	BRACK,
-	CBRACK
+	CBRACK,
+	ABRACK
 }ptype;
 
 //balanced parenthesis AST type

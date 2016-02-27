@@ -43,6 +43,10 @@ void release_sip(sip_packet *sip)
 	free(sip);
 }
 
+void release_vsnp(sip_packet *sip)
+{
+}
+
 /*
  * proccess_sip: process the payload and convert it to a sip struct
  */
@@ -60,7 +64,7 @@ sip_packet *process_sip(u_char *payload, int payload_size)
 	sip_packet *sip = (sip_packet*)malloc(sizeof(sip_packet));	
 	void *header_field_value;
 
-#define MIN_SIP_TEXT_LENGTH 7 //at least if should have SIP/x.y version in the string text, else this is a corrupt package.
+	#define MIN_SIP_TEXT_LENGTH 7 //at least if should have SIP/x.y version in the string text, else this is a corrupt package.
 
 	if(strlen(sip_text) < MIN_SIP_TEXT_LENGTH)
 	{
@@ -130,6 +134,20 @@ sip_packet *process_sip(u_char *payload, int payload_size)
 	sip->message_body = message_body;
 
 	return sip;
+}
+
+vsnp_packet *process_vsnp(u_char *payload, int payload_size)
+{
+	vsnp_packet *vsnp = (vsnp_packet*)malloc(sizeof(vsnp_packet));
+	if(payload_size < 2)
+	{
+		//free(vsnp);
+		return NULL;
+	}
+	if(payload_size < 4)
+	{
+		vsnp->&id = 1;
+	}
 }
 
 void print_sip(sip_packet *sip)
@@ -239,6 +257,7 @@ void process_packet(u_char *args, const struct pcap_pkthdr *pkthdr, const u_char
 	tcph *tcp = NULL;
 	udph *udp = NULL;
 	sip_packet *sip = NULL;
+	vsnp_packet *vsnp = NULL;
 	transport_e packet_transport;
 	protocol_e packet_protocol;
 	unsigned short sport, dport;
@@ -307,6 +326,11 @@ void process_packet(u_char *args, const struct pcap_pkthdr *pkthdr, const u_char
 	{
 		packet_protocol = SIP;
 		sip = process_sip(payload, pkthdr->len - (payload - pkt));	
+	}
+	if(sport == 1010 || dport == 1010)
+	{
+		packet_protocol = VSNP;
+		vsnp = process_vsnp(payload, pkthdr->len - (payload - pkt));	
 	}
 	//here you should add the VSNP port 
 	else if(packet_transport == TCP)

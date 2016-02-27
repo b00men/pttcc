@@ -7,6 +7,7 @@
 #include "tcp.h"
 #include "udp.h"
 #include "sip.h"
+#include "vsnp.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +29,8 @@ typedef enum protocol_e_tag
 	SIP = 0,
 	DNS = 1,
 	GENUDP = 2,
-	GENTCP = 3
+	GENTCP = 3,
+	VSNP = 4
 }protocol_e;
 
 typedef struct runmon_packet_tag
