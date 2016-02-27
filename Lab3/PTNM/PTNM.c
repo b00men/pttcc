@@ -138,16 +138,22 @@ sip_packet *process_sip(u_char *payload, int payload_size)
 
 vsnp_packet *process_vsnp(u_char *payload, int payload_size)
 {
+	unsigned short id = ntohs(*((unsigned short*)(payload)));
+	unsigned short number = ntohs(*((unsigned short*)(payload)+1));
 	vsnp_packet *vsnp = (vsnp_packet*)malloc(sizeof(vsnp_packet));
-	if(payload_size < 2)
+	vsnp->answer = 0;
+	if(payload_size == 0)
 	{
-		//free(vsnp);
+		free(vsnp);
 		return NULL;
 	}
-	if(payload_size < 4)
+	if(payload_size > 0) vsnp->id = &id;
+	if(payload_size > 2)
 	{
-		vsnp->&id = 1;
+		vsnp->answer = 1;
+		vsnp->number = &number;
 	}
+	return vsnp;
 }
 
 void print_sip(sip_packet *sip)
@@ -229,14 +235,28 @@ void check_properties(packet *pkt)
 {
 	//we will check the property that the transport should be not UDP (not a very smart check)
 	unsigned short sport, dport;
-	if(pkt->transport_type == UDP)
 	{
-		udph *udp = (udph*)pkt->transport;
-		sport = ntohs(udp->uh_sport);
-        	dport = ntohs(udp->uh_dport);
-
-		printf("Property violation! Packet %i is UDP!, source port:%i, destination port:%i \n", pkt->location_in_trace, sport, dport);
+		if(pkt->protocol_type == VSNP)
+		{
+			//printf("We found VSNP!\n");
+			vsnp_packet *vsnp;
+			vsnp = pkt->protocol;
+			if (vsnp == NULL)
+			{
+				//printf("VSNP: empty pkt\n");
+				return;
+			}
+			if (vsnp->answer) printf("VSNP Number: %hu\n\n", *(vsnp->number));
+			else printf("ID: %hu \n", *(vsnp->id));
+		}
+		
 	}
+	//{
+	//	udph *udp = (udph*)pkt->transport;
+	//	sport = ntohs(udp->uh_sport);
+    //  dport = ntohs(udp->uh_dport);
+	//	printf("Property violation! Packet %i is UDP!, source port:%i, destination port:%i \n", pkt->location_in_trace, sport, dport);
+	//}
 }
  
 
@@ -281,6 +301,7 @@ void process_packet(u_char *args, const struct pcap_pkthdr *pkthdr, const u_char
 
 	if (pkthdr->len < ETHERNET_HEADER_SIZE)
 	{
+		//printf("We found VSNP!\n");
 		//LOG this!
 		return;
 	}
@@ -366,9 +387,12 @@ void process_packet(u_char *args, const struct pcap_pkthdr *pkthdr, const u_char
 		case SIP:
 			message->protocol = sip;
 			break;
+		case VSNP:
+			message->protocol = vsnp;
+			break;
 		//add new protocols
 		default:
-			//LOG THIS!
+			printf("We found new proto!\n");
 			break;
 	}
 

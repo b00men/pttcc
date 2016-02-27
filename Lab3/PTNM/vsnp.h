@@ -22,6 +22,7 @@
 
 typedef struct vsnp_packet_tag
 {
+	unsigned char answer;
 	unsigned short *id;
 	unsigned short *number;
 }vsnp_packet;
