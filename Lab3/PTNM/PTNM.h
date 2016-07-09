@@ -46,6 +46,20 @@ typedef struct runmon_packet_tag
 	int reference_count;
 }packet;
 
+typedef struct element_tag
+{
+        unsigned short *id;
+        void *prev;
+        void *next;
+}element;
+
+typedef struct deque_tag
+{
+        element *head;   // указатель на начало списка
+        element *tail;   // указатель на конец списка
+        int size;
+}deque;
+
 #ifdef __cplusplus
 }
 #endif

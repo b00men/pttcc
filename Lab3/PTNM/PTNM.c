@@ -232,13 +232,31 @@ pthread_mutex_t *last_observed_time_lock; //to guarantee thread safe of time rea
 
 /*implement me*/
 
-void check_properties(packet *pkt)
+void check_properties(u_char *args, packet *pkt)
 {
 	if(pkt->protocol_type == VSNP)
 	{
-		vsnp_packet *vsnp;
-		vsnp = pkt->protocol;
-		if (vsnp == NULL) return;
+		if (pkt->protocol == NULL) return;
+		vsnp_packet *buff = pkt->protocol;
+		vsnp_packet *vsnp = (vsnp_packet*)malloc(sizeof(vsnp_packet));
+		vsnp->answer = buff->answer;
+		unsigned short id = *(buff->id);
+		vsnp->id = &id;
+		if (vsnp->answer)
+		{
+			unsigned short number = *(buff->number);
+			vsnp->number = &number;
+		}
+		//vsnp_packet *vsnp = pkt->protocol;
+		
+		printf("vsnp2: %u\n", vsnp->id);
+		//void *bu2ff = args;
+		printf("args: %u\n", args);
+		//u_char *id_masss;
+		printf("args: %u\n", args);
+		//printf("id_mass: %u\n", &id_masss);
+		printf("vsnp3: %u\n", vsnp->id);
+		
 		//Monitoring
 		if (vsnp->answer) printf("ID: %hu, Num: %hu\n", *(vsnp->id), *(vsnp->number));
 		else printf("ID: %hu \n", *(vsnp->id));
@@ -382,7 +400,7 @@ void process_packet(u_char *args, const struct pcap_pkthdr *pkthdr, const u_char
 			break;
 	}
 
-	check_properties(message);
+	check_properties(args,message);
 
 	release_packet(message);//we are done with this packet
 }
@@ -395,6 +413,14 @@ int main(int argc, char *argv[])
 	struct bpf_program fp;
 	const u_char *payload;
 	pthread_mutex_t *lock;
+	u_char val=5;
+	u_char *id_mass = &val;//(u_char*)malloc(sizeof(u_char));
+	//printf("main1_id_mass: %i\n", id_mass);
+	//deque *id_m = id_mass;
+	//printf("main2_id_mass: %i\n", id_mass);
+	//printf("main2_id_m: %i\n", id_m);
+	//id_m->size = 1;
+	//printf("main2_id_m->size: %i\n", (id_m->size));
 
 	pcap_t *handler;
 	
@@ -424,7 +450,7 @@ int main(int argc, char *argv[])
 	last_observed_time_lock = (pthread_mutex_t*)malloc(1 * sizeof(pthread_mutex_t));
 	pthread_mutex_init(last_observed_time_lock, NULL);
 	
-	if (pcap_loop(handler, -1, &process_packet, NULL) == -1)
+	if (pcap_loop(handler, -1, &process_packet, id_mass) == -1)
 		printf("Error occurred in capture!\n%s", pcap_geterr(handler));
 	
 	return 0;
